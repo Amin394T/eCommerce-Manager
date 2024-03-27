@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const Product = require("./models/product");
 
 mongoose
   .connect(
@@ -31,29 +32,47 @@ app.use((req, res, next) => {
 });
 
 app.post("/api/products", (req, res, next) => {
-  console.log(req.body);
-  res.status(201).json({
-    message: "Resource created.",
+  const product = new Product({
+    reference: req.body.reference,
+    name: req.body.name,
+    description: req.body.description,
+    image: req.body.image,
+    price: req.body.price,
+    category: req.body.category,
   });
+
+  product
+    .save()
+    .then(() => {
+      res.status(201).json({
+        message: "Product saved successfully!",
+      });
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
+      });
+    });
+});
+
+app.get("/api/products/:id", (req, res, next) => {
+  Product.findOne({ reference: req.params.id })
+    .then((product) => {
+      res.status(200).json(product);
+    })
+    .catch((error) => {
+      res.status(400).json({ error: error });
+    });
 });
 
 app.get("/api/products", (req, res, next) => {
-  const products = [
-    {
-      id: "oifUKwZp",
-      name: "Lenovo ThinkPad T480",
-      category: "Laptop",
-      price: 360,
-    },
-    {
-      id: "XpqmIsAQ",
-      name: "Samsung Galaxy S10",
-      category: "Smartphone",
-      price: 210,
-    },
-  ];
-
-  res.status(200).json(products);
+  Product.find()
+    .then((products) => {
+      res.status(200).json(products);
+    })
+    .catch((error) => {
+      res.status(400).json({ error: error });
+    });
 });
 
 module.exports = app;
