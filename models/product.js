@@ -7,6 +7,7 @@ const productShema = mongoose.Schema({
   image: { type: String },
   category: { type: String, required: true },
   description: { type: String },
+  inStock: { type: Boolean },
 });
 
 module.exports = mongoose.model("Product", productShema);

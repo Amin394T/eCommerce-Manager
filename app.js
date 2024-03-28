@@ -44,9 +44,29 @@ app.post("/api/products", (req, res, next) => {
   product
     .save()
     .then(() => {
-      res.status(201).json({
-        message: "Product saved successfully!",
+      res.status(201).json({ message: "Product saved successfully!" });
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
       });
+    });
+});
+
+app.put("/api/products/:id", (req, res, next) => {
+  const product = new Product({
+    _id: req.params.id,
+    reference: req.body.reference,
+    name: req.body.name,
+    description: req.body.description,
+    image: req.body.image,
+    price: req.body.price,
+    category: req.body.category,
+  });
+
+  Product.updateOne({ _id: req.params.id }, product)
+    .then((product) => {
+      res.status(201).json({ message: "Product updated successfully!" });
     })
     .catch((error) => {
       res.status(400).json({
@@ -56,7 +76,7 @@ app.post("/api/products", (req, res, next) => {
 });
 
 app.get("/api/products/:id", (req, res, next) => {
-  Product.findOne({ reference: req.params.id })
+  Product.findOne({ _id: req.params.id })
     .then((product) => {
       res.status(200).json(product);
     })
@@ -69,6 +89,16 @@ app.get("/api/products", (req, res, next) => {
   Product.find()
     .then((products) => {
       res.status(200).json(products);
+    })
+    .catch((error) => {
+      res.status(400).json({ error: error });
+    });
+});
+
+app.delete("/api/products/:id", (req, res, next) => {
+  Product.deleteOne({ _id: req.params.id })
+    .then(() => {
+      res.status(200).json({ message: "Product deleted successfully!" });
     })
     .catch((error) => {
       res.status(400).json({ error: error });
