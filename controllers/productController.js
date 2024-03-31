@@ -16,9 +16,7 @@ exports.createProduct = (req, res) => {
       res.status(201).json({ message: "Product saved successfully!" });
     })
     .catch((error) => {
-      res.status(400).json({
-        error: error,
-      });
+      res.status(400).json({ error: error });
     });
 };
 
@@ -38,9 +36,7 @@ exports.updateProduct = (req, res) => {
       res.status(201).json({ message: "Product updated successfully!" });
     })
     .catch((error) => {
-      res.status(400).json({
-        error: error,
-      });
+      res.status(400).json({ error: error });
     });
 };
 
@@ -65,11 +61,18 @@ exports.findAllProducts = (req, res) => {
 };
 
 exports.deleteProduct = (req, res) => {
-  Product.deleteOne({ _id: req.params.id })
-    .then(() => {
-      res.status(200).json({ message: "Product deleted successfully!" });
-    })
-    .catch((error) => {
-      res.status(400).json({ error: error });
-    });
+  Product.findOne({ _id: req.params.id }).then((product) => {
+    if (!product)
+      return res.status(404).json({ error: new Error("Product not found.") });
+    if (product.userId != req.auth.userId)
+      return res.status(401).json({ error: new Error("Not authorized.") });
+
+    Product.deleteOne({ _id: req.params.id })
+      .then(() => {
+        res.status(200).json({ message: "Product deleted successfully!" });
+      })
+      .catch((error) => {
+        res.status(400).json({ error: error });
+      });
+  });
 };
