@@ -1,14 +1,30 @@
 const Product = require("../models/productModel");
+const filesystem = require("fs");
 
 exports.createProduct = (req, res) => {
-  const product = new Product({
-    reference: req.body.reference,
-    name: req.body.name,
-    description: req.body.description,
-    image: req.body.image,
-    price: req.body.price,
-    category: req.body.category,
-  });
+  let product = new Product();
+  if (req.file) {
+    req.body.product = JSON.parse(req.body.product);
+    const url = req.protocol + "://" + req.get("host");
+
+    product = new Product({
+      reference: req.body.product.reference,
+      name: req.body.product.name,
+      description: req.body.product.description,
+      image: url + "/media/images/" + req.file.filename,
+      price: req.body.product.price,
+      category: req.body.product.category,
+    });
+  } else {
+    product = new Product({
+      reference: req.body.reference,
+      name: req.body.name,
+      description: req.body.description,
+      image: req.body.image,
+      price: req.body.price,
+      category: req.body.category,
+    });
+  }
 
   product
     .save()
@@ -21,15 +37,31 @@ exports.createProduct = (req, res) => {
 };
 
 exports.updateProduct = (req, res) => {
-  const product = new Product({
-    _id: req.params.id,
-    reference: req.body.reference,
-    name: req.body.name,
-    description: req.body.description,
-    image: req.body.image,
-    price: req.body.price,
-    category: req.body.category,
-  });
+  let product = new Product({ _id: req.params.id });
+  if (req.file) {
+    req.body.product = JSON.parse(req.body.product);
+    const url = req.protocol + "://" + req.get("host");
+
+    product = {
+      _id: req.params.id,
+      reference: req.body.product.reference,
+      name: req.body.product.name,
+      description: req.body.product.description,
+      image: url + "/media/images/" + req.file.filename,
+      price: req.body.product.price,
+      category: req.body.product.category,
+    };
+  } else {
+    product = {
+      _id: req.params.id,
+      reference: req.body.reference,
+      name: req.body.name,
+      description: req.body.description,
+      image: req.body.image,
+      price: req.body.price,
+      category: req.body.category,
+    };
+  }
 
   Product.updateOne({ _id: req.params.id }, product)
     .then((product) => {
@@ -64,9 +96,21 @@ exports.deleteProduct = (req, res) => {
   Product.findOne({ _id: req.params.id }).then((product) => {
     if (!product)
       return res.status(404).json({ error: new Error("Product not found.") });
-    if (product.userId != req.auth.userId)
-      return res.status(401).json({ error: new Error("Not authorized.") });
 
+    /* TO-DO: enable deletion for product creator only.
+    if (product.userId != req.authorization.userId)
+      return res.status(401).json({ error: new Error("Not authorized.") });
+    */
+
+    if (req.file) {
+      const filename = product.image.split("/images/")[1];
+      filesystem.unlink("media/images/" + filename, (err) => {
+        if (err) {
+          console.error("Error deleting file:", err);
+        }
+        console.log("File deleted successfully");
+      });
+    }
     Product.deleteOne({ _id: req.params.id })
       .then(() => {
         res.status(200).json({ message: "Product deleted successfully!" });
