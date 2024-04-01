@@ -1,14 +1,14 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const path = require("path");
+import express from "express";
+import { connect } from "mongoose";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
-const productRoutes = require("./routes/productRoutes");
-const userRoutes = require("./routes/userRoutes");
+import productRoutes from "./routes/productRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
-mongoose
-  .connect(
-    "mongodb+srv://user:pwd@ecommercedb.9a6ge1v.mongodb.net/?retryWrites=true&w=majority&appName=eCommerceDB"
-  )
+connect(
+  "mongodb+srv://user:pwd@ecommercedb.9a6ge1v.mongodb.net/?retryWrites=true&w=majority&appName=eCommerceDB"
+)
   .then(() => {
     console.log("Successfully connected to MongoDB Atlas!");
   })
@@ -34,9 +34,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/images", express.static(path.join(__dirname, "media/images")));
+app.use(
+  "/images",
+  express.static(join(dirname(fileURLToPath(import.meta.url)), "media/images"))
+);
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 
-module.exports = app;
+export default app;

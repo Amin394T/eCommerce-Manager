@@ -1,9 +1,9 @@
-const jwt = require("jsonwebtoken");
+import jsonwebtoken from "jsonwebtoken";
 
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
-    const decodedToken = jwt.verify(token, "SECRET_KEY");
+    const decodedToken = jsonwebtoken.verify(token, "SECRET_KEY");
     req.authorization = { userId: decodedToken.userId };
 
     if (req.body.userId && req.body.userId != decodedToken.userId) {

@@ -1,7 +1,7 @@
-const Product = require("../models/productModel");
-const filesystem = require("fs");
+import Product from "../models/productModel.js";
+import { unlink } from "fs";
 
-exports.createProduct = (req, res) => {
+export function createProduct(req, res) {
   let product = new Product();
   if (req.file) {
     req.body.product = JSON.parse(req.body.product);
@@ -34,9 +34,9 @@ exports.createProduct = (req, res) => {
     .catch((error) => {
       res.status(400).json({ error: error });
     });
-};
+}
 
-exports.updateProduct = (req, res) => {
+export function updateProduct(req, res) {
   let product = new Product({ _id: req.params.id });
   if (req.file) {
     req.body.product = JSON.parse(req.body.product);
@@ -70,9 +70,9 @@ exports.updateProduct = (req, res) => {
     .catch((error) => {
       res.status(400).json({ error: error });
     });
-};
+}
 
-exports.findProduct = (req, res) => {
+export function findProduct(req, res) {
   Product.findOne({ _id: req.params.id })
     .then((product) => {
       res.status(200).json(product);
@@ -80,9 +80,9 @@ exports.findProduct = (req, res) => {
     .catch((error) => {
       res.status(400).json({ error: error });
     });
-};
+}
 
-exports.findAllProducts = (req, res) => {
+export function findAllProducts(req, res) {
   Product.find()
     .then((products) => {
       res.status(200).json(products);
@@ -90,9 +90,9 @@ exports.findAllProducts = (req, res) => {
     .catch((error) => {
       res.status(400).json({ error: error });
     });
-};
+}
 
-exports.deleteProduct = (req, res) => {
+export function deleteProduct(req, res) {
   Product.findOne({ _id: req.params.id }).then((product) => {
     if (!product)
       return res.status(404).json({ error: new Error("Product not found.") });
@@ -104,7 +104,7 @@ exports.deleteProduct = (req, res) => {
 
     if (req.file) {
       const filename = product.image.split("/images/")[1];
-      filesystem.unlink("media/images/" + filename, (err) => {
+      unlink("media/images/" + filename, (err) => {
         if (err) {
           console.error("Error deleting file:", err);
         }
@@ -119,4 +119,4 @@ exports.deleteProduct = (req, res) => {
         res.status(400).json({ error: error });
       });
   });
-};
+}

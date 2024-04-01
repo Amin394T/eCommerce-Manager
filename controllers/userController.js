@@ -1,9 +1,9 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const User = require("../models/userModel");
+import { hash, compare } from "bcrypt";
+import jsonwebtoken from "jsonwebtoken";
+import User from "../models/userModel.js";
 
-exports.register = (req, res, next) => {
-  bcrypt.hash(req.body.password, 10).then((hash) => {
+export function register(req, res, next) {
+  hash(req.body.password, 10).then((hash) => {
     const user = new User({
       username: req.body.username,
       password: hash,
@@ -18,9 +18,9 @@ exports.register = (req, res, next) => {
         res.status(500).json({ error: error });
       });
   });
-};
+}
 
-exports.login = (req, res, next) => {
+export function login(req, res, next) {
   User.findOne({ username: req.body.username })
     .then((user) => {
       if (!user) {
@@ -29,15 +29,14 @@ exports.login = (req, res, next) => {
           .json({ error: new Error("Username not found.") });
       }
 
-      bcrypt
-        .compare(req.body.password, user.password)
+      compare(req.body.password, user.password)
         .then((valid) => {
           if (!valid) {
             return res
               .status(401)
               .json({ error: new Error("Password is incorrect.") });
           }
-          const token = jwt.sign({ userId: user._id }, "SECRET_KEY", {
+          const token = jsonwebtoken.sign({ userId: user._id }, "SECRET_KEY", {
             expiresIn: "24h",
           });
           res.status(200).json({
@@ -52,4 +51,4 @@ exports.login = (req, res, next) => {
     .catch((error) => {
       res.status(500).json({ error: error });
     });
-};
+}

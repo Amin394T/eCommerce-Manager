@@ -1,14 +1,14 @@
-const express = require("express");
-const productController = require("../controllers/productController");
-const authorization = require("../middleware/authentication");
-const fileUpload = require("../middleware/fileUpload");
+import { Router } from "express";
+import { createProduct, updateProduct, findProduct, findAllProducts, deleteProduct } from "../controllers/productController.js";
+import authorization from "../middleware/authentication.js";
+import fileUpload from "../middleware/fileUpload.js";
 
-const router = express.Router();
+const router = Router();
 
-router.post("/", authorization, fileUpload, productController.createProduct);
-router.put("/:id", authorization, fileUpload, productController.updateProduct);
-router.get("/:id", authorization, productController.findProduct);
-router.get("/", authorization, productController.findAllProducts);
-router.delete("/:id", authorization, productController.deleteProduct);
+router.post("/", authorization, fileUpload, createProduct);
+router.put("/:id", authorization, fileUpload, updateProduct);
+router.get("/:id", authorization, findProduct);
+router.get("/", authorization, findAllProducts);
+router.delete("/:id", authorization, deleteProduct);
 
-module.exports = router;
+export default router;
