@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
+
 connect(
   "mongodb+srv://user:pwd@ecommercedb.9a6ge1v.mongodb.net/?retryWrites=true&w=majority&appName=eCommerceDB"
 )
@@ -18,6 +19,12 @@ connect(
   });
 
 const app = express();
+
+// Request logging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 app.use(express.json());
 
@@ -39,7 +46,31 @@ app.use(
   express.static(join(dirname(fileURLToPath(import.meta.url)), "media/images"))
 );
 
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'up',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
+
+
+// Error handling
+app.use((err, req, res, next) => {
+  if (err) {
+    console.error(`[${new Date().toISOString()}] Error:`, err);
+    return res.status(err.status || 500).json({
+      message: err.message || 'Internal Server Error',
+      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
+  }
+  
+  res.status(404).json({ message: 'Route not found' });
+});
 
 export default app;

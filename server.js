@@ -1,48 +1,41 @@
-import { createServer } from "http";
 import app from "./app.js";
+import dotenv from 'dotenv';
 
-const normalizePort = (val) => {
-  const port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    return val;
-  }
-  if (port >= 0) {
-    return port;
-  }
-  return false;
-};
-const port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
+dotenv.config();
 
-const errorHandler = (error) => {
-  if (error.syscall !== "listen") {
-    throw error;
-  }
-  const address = server.address();
-  const bind =
-    typeof address === "string" ? "pipe " + address : "port: " + port;
-  switch (error.code) {
-    case "EACCES":
-      console.error(bind + " requires elevated privileges.");
-      process.exit(1);
-      break;
-    case "EADDRINUSE":
-      console.error(bind + " is already in use.");
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-};
-
-const server = createServer(app);
-
-server.on("error", errorHandler);
-server.on("listening", () => {
-  const address = server.address();
-  const bind = typeof address === "string" ? "pipe " + address : "port " + port;
-  console.log("Listening on " + bind);
+const port = process.argv[2] || process.env.PORT || 3000;
+const server = app.listen(port, () => {
+  console.log(`[${new Date().toISOString()}] Server running on port : ${port}`);
+  console.log(`[${new Date().toISOString()}] Environment type : ${process.env.NODE_ENV || 'development'}`);
 });
 
-server.listen(port);
+
+const gracefulShutdown = (signal) => {
+  console.log(`[${new Date().toISOString()}] ${signal} received. Starting graceful shutdown...`);
+  
+  server.close(() => {
+    console.log(`[${new Date().toISOString()}] Server closed. Process exiting...`);
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error(`[${new Date().toISOString()}] Could not close connections in time, forcefully shutting down`);
+    process.exit(1);
+  }, 30000);
+};
+
+['SIGTERM', 'SIGINT'].forEach(signal => {
+  process.on(signal, () => gracefulShutdown(signal));
+});
+
+
+process.on('uncaughtException', (error) => {
+  console.error(`[${new Date().toISOString()}] Uncaught Exception:`, error);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error(`[${new Date().toISOString()}] Unhandled Rejection at:`, promise, 'reason:', reason);
+  gracefulShutdown('UNHANDLED_REJECTION');
+});
