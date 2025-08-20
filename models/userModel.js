@@ -2,8 +2,9 @@ import { Schema, model } from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
 
 const userSchema = Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  username: { type: String, required: true, unique: true, minlength: 3, maxlength: 25 },
+  password: { type: String, required: true, minlength: 8, maxlength: 100 },
+  status: { type: String, enum: ["active", "blocked"], default: "active" },
 });
 
 userSchema.plugin(uniqueValidator);

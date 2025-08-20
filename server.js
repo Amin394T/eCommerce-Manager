@@ -7,7 +7,7 @@ dotenv.config();
 const port = process.argv[2] || process.env.PORT || 3000;
 const server = app.listen(port, () => {
   console.log(`[${new Date().toISOString()}] Server running on port : ${port}`);
-  console.log(`[${new Date().toISOString()}] Environment type : ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[${new Date().toISOString()}] Environment type : ${process.env.ENV_TYPE || 'development'}`);
 });
 
 
