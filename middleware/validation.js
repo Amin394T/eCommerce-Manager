@@ -1,19 +1,19 @@
 import { body, validationResult } from 'express-validator';
 
 export const validateRegistration = [
+  body('email')
+    .trim()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('E-Mail format is invalid'),
+  
   body('username')
     .trim()
     .isLength({ min: 3, max: 25 })
     .withMessage('Username must be between 3 and 25 characters')
     .matches(/^[a-zA-Z0-9\u0600-\u06FF ]+$/)
     .withMessage('Username must be alphanumeric'),
-  
-  body('email')
-    .trim()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Please provide a valid email'),
-    
+
   body('password')
     .isLength({ min: 8, max: 100 })
     .withMessage('Password must be between 8 and 100 characters')
