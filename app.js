@@ -5,10 +5,12 @@ import { fileURLToPath } from "url";
 
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import dotenv from 'dotenv';
 
+dotenv.config();
 
 connect(
-  "mongodb+srv://user:pwd@ecommercedb.9a6ge1v.mongodb.net/?retryWrites=true&w=majority&appName=eCommerceDB"
+  process.env.MONGODB_URI,
 )
   .then(() => {
     console.log("Successfully connected to MongoDB Atlas!");
