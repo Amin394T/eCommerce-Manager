@@ -1,7 +1,8 @@
 import express from "express";
-import { connect } from "mongoose";
+import mongoose, { connect } from "mongoose";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { logMessage } from "./server.js";
 
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -9,46 +10,40 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-connect(
-  process.env.MONGODB_URI,
-)
-  .then(() => {
-    console.log("Successfully connected to MongoDB Atlas!");
-  })
-  .catch((error) => {
-    console.log("Unable to connect to MongoDB Atlas!");
-    console.error(error);
-  });
 
+// Application configuration
 const app = express();
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
+connect(process.env.MONGODB_URI)
+  .then(() => { logMessage("Successfully connected to MongoDB Atlas!") })
+  .catch((error) => {
+    logMessage("Connection to MongoDB Atlas failed! " + error.message);
+    process.kill(process.pid, 'SIGINT');
+  });
 
-app.use(express.json());
 
+// Request configuration
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "*");
+  res.setHeader("Access-Control-Allow-Methods", "*");
   next();
 });
 
-app.use(
-  "/images",
-  express.static(join(dirname(fileURLToPath(import.meta.url)), "media/images"))
-);
+app.use((req, res, next) => {
+  logMessage(`${req.method} ${req.url}`);
+  next();
+});
 
-// Health check
+const __dirname = dirname(fileURLToPath(import.meta.url));
+app.use("/images", express.static(join(__dirname, "media/images")));
+
+app.use(express.json());
+app.use("/api/products", productRoutes);
+app.use("/api/users", userRoutes);
+
+
+// Health checking
 app.get('/health', (req, res) => {
   res.json({
     status: 'up',
@@ -58,21 +53,18 @@ app.get('/health', (req, res) => {
 });
 
 
-app.use("/api/products", productRoutes);
-app.use("/api/users", userRoutes);
-
-
 // Error handling
-app.use((err, req, res, next) => {
-  if (err) {
-    console.error(`[${new Date().toISOString()}] Error:`, err);
-    return res.status(err.status || 500).json({
-      message: err.message || 'Internal Server Error',
-      ...(process.env.ENV_TYPE !== 'production' && { stack: err.stack })
-    });
-  }
-  
-  res.status(404).json({ message: 'Route not found' });
+app.use((err, req, res) => {
+  logMessage(`Error occurred: ${err.message}`);
+  return res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    ...(process.env.ENV_TYPE !== 'production' && { stack: err.stack })
+  });
+});
+
+app.use((req, res) => {
+  logMessage(`Unknown Route: ${req.method} ${req.url}`);
+  return res.status(404).json({ message: 'Route not found' });
 });
 
 export default app;
