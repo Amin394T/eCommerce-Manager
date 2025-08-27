@@ -1,62 +1,66 @@
 import { hash, compare } from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
+
 import User from "../models/userModel.js";
 import { createError } from "../utils/AppError.js";
 
+// Authentication parameters
 const SALT_ROUNDS = 12;
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+const LOGIN_TIMEOUT = 15 * 60 * 1000;
 
-const loginAttempts = new Map();
+let loginAttempts = new Map();
 
+
+// Login attempts tracking
 const checkLoginAttempts = (username) => {
   const userAttempts = loginAttempts.get(username) || { count: 0, lastAttempt: 0 };
   
   if (userAttempts.count >= MAX_LOGIN_ATTEMPTS) {
-    const timeElapsed = Date.now() - userAttempts.lastAttempt;
+    let timeElapsed = Date.now() - userAttempts.lastAttempt;
+    
     if (timeElapsed < LOGIN_TIMEOUT) {
-      throw createError(`Too many login attempts. Please try again in ${Math.ceil((LOGIN_TIMEOUT - timeElapsed) / 60000)} minutes.`, 429);
+      let timeLeft = Math.ceil((LOGIN_TIMEOUT - timeElapsed) / 60000);
+      throw createError(`Too many login attempts. Try again in ${timeLeft} minutes.`, 429);
     }
-    userAttempts.count = 0;
+    else {
+      userAttempts.count = 0;
+    }
   }
   
   return userAttempts;
 };
 
-const incrementLoginAttempts = (username) => {
-  const attempts = loginAttempts.get(username) || { count: 0, lastAttempt: 0 };
+const updateLoginAttempts = (username) => {
+  let attempts = loginAttempts.get(username) || { count: 0, lastAttempt: 0 };
   attempts.count += 1;
   attempts.lastAttempt = Date.now();
   loginAttempts.set(username, attempts);
 };
 
+
+// User registration
 export async function register(req, res, next) {
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [
-        { username: req.body.username },
-        { email: req.body.email }
-      ]
-    });
 
+    // Prepare request data
+    let existingUser = await User.findOne({ username: req.body.username });
     if (existingUser) {
-      throw createError('Username or email already exists', 400);
+      throw createError('Username already exists', 400);
     }
+    let hashedPassword = await hash(req.body.password, SALT_ROUNDS);
 
-    const hashedPassword = await hash(req.body.password, SALT_ROUNDS);
-    
-    const user = new User({
+    // Persist user data
+    let user = new User({
       username: req.body.username.trim(),
-      email: req.body.email.trim(),
       password: hashedPassword,
+      phone: req.body.phone.trim(),
       status: 'active'
     });
-
     await user.save();
 
-    // Create token but don't send password
-    const token = jsonwebtoken.sign(
+    // Handle response data
+    let token = jsonwebtoken.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "12h" }
@@ -64,29 +68,27 @@ export async function register(req, res, next) {
 
     res.status(201).json({
       message: "User registered successfully",
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      },
+      user: { id: user._id, username: user.username, phone: user.phone },
       token
     });
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }
 
+
+// User authentication
 export async function login(req, res, next) {
   try {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
 
-    // Check login attempts
-    const attempts = checkLoginAttempts(username);
-
-    const user = await User.findOne({ username }).select('+password');
-
+    // Check username validity
+    checkLoginAttempts(username);
+    
+    let user = await User.findOne({ username }).select('+password');
     if (!user) {
-      incrementLoginAttempts(username);
+      updateLoginAttempts(username);
       throw createError('Invalid credentials', 401);
     }
 
@@ -94,36 +96,30 @@ export async function login(req, res, next) {
       throw createError('Account is blocked. Please contact support.', 403);
     }
 
-    const isValidPassword = await compare(password, user.password);
+    // Check password validity
+    let isValidPassword = await compare(password, user.password);
 
     if (!isValidPassword) {
-      incrementLoginAttempts(username);
+      updateLoginAttempts(username);
       throw createError('Invalid credentials', 401);
     }
 
-    // Reset login attempts on successful login
+    // Handle successful login
     loginAttempts.delete(username);
 
-    const token = jsonwebtoken.sign(
+    let token = jsonwebtoken.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "12h" }
     );
 
-    // Remove password from response
-    const userResponse = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      status: user.status
-    };
-
     res.status(200).json({
       message: 'Login successful',
-      user: userResponse,
+      user: { id: user._id, username: user.username, phone: user.phone },
       token
     });
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }

@@ -3,15 +3,14 @@ import mongoose, { connect } from "mongoose";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { logMessage } from "./server.js";
+import dotenv from 'dotenv';
 
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 
 // Application configuration
+dotenv.config();
 const app = express();
 
 connect(process.env.MONGODB_URI)
