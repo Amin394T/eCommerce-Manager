@@ -1,7 +1,9 @@
+import { unlink } from "node:fs";
+import { promisify } from 'node:util';
+
 import Product from "../models/productModel.js";
-import { unlink } from "fs";
 import { createError } from "../utilities/ErrorMsg.js";
-import { promisify } from 'util';
+
 
 const unlinkAsync = promisify(unlink);
 
@@ -83,6 +85,10 @@ export async function updateProduct(req, res, next) {
       throw createError('Product not found', 404);
     }
 
+    if (existingProduct.userId !== req.authorization.userId) {
+      throw createError('Not authorized to modify this product', 403);
+    }
+
     const result = await Product.updateOne({ _id: req.params.id }, product);
     if (result.modifiedCount === 0) {
       throw createError('No changes were made to the product', 400);
@@ -131,11 +137,9 @@ export async function deleteProduct(req, res, next) {
       throw createError('Product not found', 404);
     }
 
-    /* TO-DO: enable deletion for product creator only.
     if (product.userId !== req.authorization.userId) {
       throw createError('Not authorized to delete this product', 403);
     }
-    */
 
     if (product.image) {
       try {

@@ -4,6 +4,7 @@ import jsonwebtoken from "jsonwebtoken";
 import User from "../models/userModel.js";
 import { createError } from "../utilities/ErrorMsg.js";
 
+
 // Authentication parameters
 const SALT_ROUNDS = 12;
 const MAX_LOGIN_ATTEMPTS = 5;

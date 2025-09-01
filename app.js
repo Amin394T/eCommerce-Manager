@@ -1,10 +1,10 @@
 import express from "express";
 import mongoose, { connect } from "mongoose";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { logMessage } from "./server.js";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import dotenv from 'dotenv';
 
+import { logMessage } from "./server.js";
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
