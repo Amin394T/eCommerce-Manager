@@ -1,4 +1,4 @@
-class AppError extends Error {
+class ErrorMsg extends Error {
   constructor(message, statusCode) {
     super(message);
     this.statusCode = statusCode;
@@ -10,7 +10,7 @@ class AppError extends Error {
 }
 
 export const createError = (message, statusCode = 500) => {
-  return new AppError(message, statusCode);
+  return new ErrorMsg(message, statusCode);
 };
 
-export default AppError;
+export default ErrorMsg;

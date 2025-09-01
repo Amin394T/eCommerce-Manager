@@ -53,7 +53,7 @@ app.get('/health', (req, res) => {
 
 
 // Error handling
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   logMessage(`Error occurred: ${err.message}`);
   return res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',

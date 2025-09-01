@@ -1,6 +1,6 @@
 import Product from "../models/productModel.js";
 import { unlink } from "fs";
-import { createError } from "../utils/AppError.js";
+import { createError } from "../utilities/ErrorMsg.js";
 import { promisify } from 'util';
 
 const unlinkAsync = promisify(unlink);

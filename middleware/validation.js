@@ -1,12 +1,6 @@
 import { body, validationResult } from 'express-validator';
 
-export const validateRegistration = [
-  body('email')
-    .trim()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('E-Mail format is invalid'),
-  
+export const validateRegister = [
   body('username')
     .trim()
     .isLength({ min: 3, max: 25 })
@@ -18,7 +12,12 @@ export const validateRegistration = [
     .isLength({ min: 8, max: 100 })
     .withMessage('Password must be between 8 and 100 characters')
     .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/)
-    .withMessage('Password must contain at least one letter and one number'),
+    .withMessage('Password lacks in complexity'),
+
+  body('phone')
+    .trim()
+    .isMobilePhone()
+    .withMessage('Phone number is invalid'),
 
   (req, res, next) => {
     const errors = validationResult(req);
