@@ -141,16 +141,25 @@ export async function deleteProduct(req, res, next) {
       throw createError('Not authorized to delete this product', 403);
     }
 
-    if (product.image) {
-      try {
-        const filename = product.image.split("/images/")[1];
-        await unlinkAsync("media/images/" + filename);
-      } catch (error) {
-        console.error('Error deleting image file:', error);
-      }
+    // if (product.image) {
+    //   try {
+    //     const filename = product.image.split("/images/")[1];
+    //     await unlinkAsync("media/images/" + filename);
+    //   } catch (error) {
+    //     console.error('Error deleting image file:', error);
+    //   }
+    // }
+
+    // await Product.deleteOne({ _id: req.params.id });
+    const result = await Product.updateOne(
+      { _id: req.params.id },
+      { status: 'deleted' }
+    );
+
+    if (result.modifiedCount === 0) {
+      throw createError('Failed to delete product', 400);
     }
 
-    await Product.deleteOne({ _id: req.params.id });
     res.status(200).json({ 
       message: "Product deleted successfully!",
       productId: req.params.id
