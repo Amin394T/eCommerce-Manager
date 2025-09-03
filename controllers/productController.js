@@ -8,31 +8,22 @@ import { createError } from "../utilities/ErrorMsg.js";
 const unlinkAsync = promisify(unlink);
 
 export async function createProduct(req, res, next) {
-  let product = new Product();
-  if (req.file) {
-    req.body.product = JSON.parse(req.body.product);
-    const url = req.protocol + "://" + req.get("host");
+  const productData = req.file 
+    ? {
+        ...JSON.parse(req.body.product),
+        image: req.protocol + "://" + req.get("host") + "/media/images/" + req.file.filename
+      }
+    : req.body;
 
-    product = new Product({
-      reference: req.body.product.reference,
-      name: req.body.product.name,
-      description: req.body.product.description,
-      image: url + "/media/images/" + req.file.filename,
-      price: req.body.product.price,
-      category: req.body.product.category,
-      owner: req.authorization.userId
-    });
-  } else {
-    product = new Product({
-      reference: req.body.reference,
-      name: req.body.name,
-      description: req.body.description,
-      image: req.body.image,
-      price: req.body.price,
-      category: req.body.category,
-      owner: req.authorization.userId
-    });
-  }
+  const product = new Product({
+    reference: productData.reference,
+    name: productData.name,
+    description: productData.description,
+    image: productData.image,
+    price: productData.price,
+    category: productData.category,
+    owner: req.authorization.userId
+  });
 
   try {
     const existingProduct = await Product.findOne({ reference: product.reference });
@@ -55,31 +46,22 @@ export async function createProduct(req, res, next) {
 }
 
 export async function updateProduct(req, res, next) {
-  let product = new Product({ _id: req.params.id });
-  if (req.file) {
-    req.body.product = JSON.parse(req.body.product);
-    const url = req.protocol + "://" + req.get("host");
+  const productData = req.file 
+    ? {
+        ...JSON.parse(req.body.product),
+        image: req.protocol + "://" + req.get("host") + "/media/images/" + req.file.filename
+      }
+    : req.body;
 
-    product = {
-      _id: req.params.id,
-      reference: req.body.product.reference,
-      name: req.body.product.name,
-      description: req.body.product.description,
-      image: url + "/media/images/" + req.file.filename,
-      price: req.body.product.price,
-      category: req.body.product.category,
-    };
-  } else {
-    product = {
-      _id: req.params.id,
-      reference: req.body.reference,
-      name: req.body.name,
-      description: req.body.description,
-      image: req.body.image,
-      price: req.body.price,
-      category: req.body.category,
-    };
-  }
+  const product = {
+    _id: req.params.id,
+    reference: productData.reference,
+    name: productData.name,
+    description: productData.description,
+    image: productData.image,
+    price: productData.price,
+    category: productData.category,
+  };
 
   try {
     const existingProduct = await Product.findById(req.params.id);
@@ -108,6 +90,7 @@ export async function updateProduct(req, res, next) {
   }
 }
 
+
 export async function findProduct(req, res, next) {
   try {
     const product = await Product.findById(req.params.id);
@@ -120,6 +103,7 @@ export async function findProduct(req, res, next) {
   }
 }
 
+
 export async function findAllProducts(req, res, next) {
   try {
     const products = await Product.find();
@@ -131,6 +115,7 @@ export async function findAllProducts(req, res, next) {
     next(error);
   }
 }
+
 
 export async function deleteProduct(req, res, next) {
   try {
