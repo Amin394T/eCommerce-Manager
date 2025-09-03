@@ -104,6 +104,19 @@ export async function findProduct(req, res, next) {
 }
 
 
+export async function findCategoryProducts(req, res, next) {
+  try {
+    const products = await Product.find({ category: req.params.category });
+    if (!products.length) {
+      throw createError('No products found in this category', 404);
+    }
+    res.status(200).json(products);
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 export async function findAllProducts(req, res, next) {
   try {
     const products = await Product.find();
