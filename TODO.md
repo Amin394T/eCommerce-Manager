@@ -1,0 +1,5 @@
+- simplify product creation and update code
+- add get category products
+- use product reference in URLs instead of _id
+- implement soft deletion
+- implement product quantity

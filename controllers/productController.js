@@ -20,6 +20,7 @@ export async function createProduct(req, res, next) {
       image: url + "/media/images/" + req.file.filename,
       price: req.body.product.price,
       category: req.body.product.category,
+      owner: req.authorization.userId
     });
   } else {
     product = new Product({
@@ -29,6 +30,7 @@ export async function createProduct(req, res, next) {
       image: req.body.image,
       price: req.body.price,
       category: req.body.category,
+      owner: req.authorization.userId
     });
   }
 
@@ -85,7 +87,7 @@ export async function updateProduct(req, res, next) {
       throw createError('Product not found', 404);
     }
 
-    if (existingProduct.userId !== req.authorization.userId) {
+    if (existingProduct.owner != req.authorization.userId) {
       throw createError('Not authorized to modify this product', 403);
     }
 
@@ -137,7 +139,7 @@ export async function deleteProduct(req, res, next) {
       throw createError('Product not found', 404);
     }
 
-    if (product.userId !== req.authorization.userId) {
+    if (product.owner != req.authorization.userId) {
       throw createError('Not authorized to delete this product', 403);
     }
 
@@ -146,7 +148,6 @@ export async function deleteProduct(req, res, next) {
         const filename = product.image.split("/images/")[1];
         await unlinkAsync("media/images/" + filename);
       } catch (error) {
-        // Log error but don't fail the request if image deletion fails
         console.error('Error deleting image file:', error);
       }
     }

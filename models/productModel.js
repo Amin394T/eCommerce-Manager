@@ -7,7 +7,7 @@ const productSchema = Schema({
   image: { type: String },
   category: { type: String, required: true },
   description: { type: String },
-  inStock: { type: Boolean },
+  owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
 });
 
 export default model("Product", productSchema);

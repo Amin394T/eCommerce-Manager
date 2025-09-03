@@ -7,10 +7,10 @@ import fileUpload from "../middleware/fileUpload.js";
 
 const router = Router();
 
+router.get("/", findAllProducts);
+router.get("/:id", findProduct);
 router.post("/", authorization, fileUpload, createProduct);
 router.put("/:id", authorization, fileUpload, updateProduct);
-router.get("/:id", authorization, findProduct);
-router.get("/", authorization, findAllProducts);
 router.delete("/:id", authorization, deleteProduct);
 
 export default router;
