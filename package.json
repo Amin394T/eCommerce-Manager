@@ -1,13 +1,13 @@
 {
   "name": "ecommerce-manager",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node --watch server.js"
   },
-  "author": "",
+  "author": "Amin394T",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
