@@ -1,3 +1,2 @@
-- use product reference in URLs instead of _id
-- implement soft deletion
 - implement product quantity
+- implement cart management

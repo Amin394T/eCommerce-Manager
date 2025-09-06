@@ -54,8 +54,7 @@ export async function updateProduct(req, res, next) {
     : req.body;
 
   const product = {
-    _id: req.params.id,
-    reference: productData.reference,
+    reference: req.params.id,
     name: productData.name,
     description: productData.description,
     image: productData.image,
@@ -64,7 +63,7 @@ export async function updateProduct(req, res, next) {
   };
 
   try {
-    const existingProduct = await Product.findById(req.params.id);
+    const existingProduct = await Product.findOne({ reference: req.params.id });
     if (!existingProduct) {
       throw createError('Product not found', 404);
     }
@@ -73,7 +72,7 @@ export async function updateProduct(req, res, next) {
       throw createError('Not authorized to modify this product', 403);
     }
 
-    const result = await Product.updateOne({ _id: req.params.id }, product);
+    const result = await Product.updateOne({ reference: req.params.id }, product);
     if (result.modifiedCount === 0) {
       throw createError('No changes were made to the product', 400);
     }
@@ -81,7 +80,7 @@ export async function updateProduct(req, res, next) {
     res.status(200).json({ 
       message: "Product updated successfully!",
       product: {
-        id: req.params.id,
+        reference: req.params.id,
         ...product
       }
     });
@@ -93,7 +92,7 @@ export async function updateProduct(req, res, next) {
 
 export async function findProduct(req, res, next) {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ reference: req.params.id });
     if (!product) {
       throw createError('Product not found', 404);
     }
@@ -132,7 +131,7 @@ export async function findAllProducts(req, res, next) {
 
 export async function deleteProduct(req, res, next) {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ reference: req.params.id });
     if (!product) {
       throw createError('Product not found', 404);
     }
@@ -150,9 +149,9 @@ export async function deleteProduct(req, res, next) {
     //   }
     // }
 
-    // await Product.deleteOne({ _id: req.params.id });
+    // await Product.deleteOne({ reference: req.params.id });
     const result = await Product.updateOne(
-      { _id: req.params.id },
+      { reference: req.params.id },
       { status: 'deleted' }
     );
 
@@ -162,7 +161,7 @@ export async function deleteProduct(req, res, next) {
 
     res.status(200).json({ 
       message: "Product deleted successfully!",
-      productId: req.params.id
+      reference: req.params.id
     });
   } catch (error) {
     next(error);
