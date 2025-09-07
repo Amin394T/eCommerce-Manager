@@ -56,6 +56,7 @@ export async function register(req, res, next) {
       username: req.body.username.trim(),
       password: hashedPassword,
       phone: req.body.phone.trim(),
+      city: req.body.city.trim(),
       status: 'active'
     });
     await user.save();
@@ -69,7 +70,7 @@ export async function register(req, res, next) {
 
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: user._id, username: user.username, phone: user.phone },
+      user: { name: user.username, phone: user.phone, city: user.city },
       token
     });
   }
@@ -116,7 +117,7 @@ export async function login(req, res, next) {
 
     res.status(200).json({
       message: 'Login successful',
-      user: { id: user._id, username: user.username, phone: user.phone },
+      user: { user: user.username, phone: user.phone, city: user.city },
       token
     });
   }

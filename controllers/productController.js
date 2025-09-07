@@ -22,7 +22,8 @@ export async function createProduct(req, res, next) {
     image: productData.image,
     price: productData.price,
     category: productData.category,
-    owner: req.authorization.userId
+    quantity: productData.quantity,
+    owner: req.authorization.userId,
   });
 
   try {
@@ -40,7 +41,8 @@ export async function createProduct(req, res, next) {
         reference: product.reference
       }
     });
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }
@@ -54,12 +56,12 @@ export async function updateProduct(req, res, next) {
     : req.body;
 
   const product = {
-    reference: req.params.id,
     name: productData.name,
     description: productData.description,
     image: productData.image,
     price: productData.price,
     category: productData.category,
+    quantity: productData.quantity,
   };
 
   try {
@@ -84,7 +86,8 @@ export async function updateProduct(req, res, next) {
         ...product
       }
     });
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }
@@ -97,7 +100,8 @@ export async function findProduct(req, res, next) {
       throw createError('Product not found', 404);
     }
     res.status(200).json(product);
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }
@@ -110,7 +114,8 @@ export async function findCategoryProducts(req, res, next) {
       throw createError('No products found in this category', 404);
     }
     res.status(200).json(products);
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }
@@ -123,7 +128,8 @@ export async function findAllProducts(req, res, next) {
       throw createError('No products found', 404);
     }
     res.status(200).json(products);
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }
@@ -140,16 +146,6 @@ export async function deleteProduct(req, res, next) {
       throw createError('Not authorized to delete this product', 403);
     }
 
-    // if (product.image) {
-    //   try {
-    //     const filename = product.image.split("/images/")[1];
-    //     await unlinkAsync("media/images/" + filename);
-    //   } catch (error) {
-    //     console.error('Error deleting image file:', error);
-    //   }
-    // }
-
-    // await Product.deleteOne({ reference: req.params.id });
     const result = await Product.updateOne(
       { reference: req.params.id },
       { status: 'deleted' }
@@ -163,7 +159,8 @@ export async function deleteProduct(req, res, next) {
       message: "Product deleted successfully!",
       reference: req.params.id
     });
-  } catch (error) {
+  }
+  catch (error) {
     next(error);
   }
 }

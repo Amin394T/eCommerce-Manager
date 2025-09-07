@@ -1,2 +1,0 @@
-- implement product quantity
-- implement cart management
