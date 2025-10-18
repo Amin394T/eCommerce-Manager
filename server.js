@@ -9,7 +9,7 @@ export let logMessage = (message) => {
 }
 
 
-// Startup handling
+// startup handling
 const port = process.argv[2] || process.env.PORT || 3000;
 const env = process.env.ENV_TYPE || 'unspecified';
 
@@ -19,7 +19,7 @@ const server = app.listen(port, () => {
 });
 
 
-// Shutdown handling
+// shutdown handling
 let exit = (signal) => {
   logMessage(`Signal ${signal} received. Starting graceful shutdown...`);
 
@@ -37,6 +37,8 @@ let exit = (signal) => {
 process.on('SIGTERM', () => exit('TERMINATE'));
 process.on('SIGINT', () => exit('INTERRUPT'));
 
+
+// exceptions handling
 process.on('uncaughtException', (error) => {
   logMessage(`Uncaught Exception: ${error.message}`);
   exit('UNCAUGHT_EXCEPTION');

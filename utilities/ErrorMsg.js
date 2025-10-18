@@ -9,7 +9,7 @@ class ErrorMsg extends Error {
   }
 }
 
-export const createError = (message, statusCode = 500) => {
+export const raiseError = (message, statusCode = 500) => {
   return new ErrorMsg(message, statusCode);
 };
 

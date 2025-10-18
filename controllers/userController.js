@@ -2,10 +2,10 @@ import { hash, compare } from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
 
 import User from "../models/userModel.js";
-import { createError } from "../utilities/ErrorMsg.js";
+import { raiseError } from "../utilities/ErrorMsg.js";
 
 
-// Authentication parameters
+// authentication parameters
 const SALT_ROUNDS = 12;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_TIMEOUT = 15 * 60 * 1000;
@@ -13,7 +13,7 @@ const LOGIN_TIMEOUT = 15 * 60 * 1000;
 let loginAttempts = new Map();
 
 
-// Login attempts tracking
+// login attempts tracking
 const checkLoginAttempts = (username) => {
   const userAttempts = loginAttempts.get(username) || { count: 0, lastAttempt: 0 };
   
@@ -22,7 +22,7 @@ const checkLoginAttempts = (username) => {
     
     if (timeElapsed < LOGIN_TIMEOUT) {
       let timeLeft = Math.ceil((LOGIN_TIMEOUT - timeElapsed) / 60000);
-      throw createError(`Too many login attempts. Try again in ${timeLeft} minutes.`, 429);
+      throw raiseError(`Too many login attempts. Try again in ${timeLeft} minutes.`, 429);
     }
     else {
       userAttempts.count = 0;
@@ -40,18 +40,18 @@ const updateLoginAttempts = (username) => {
 };
 
 
-// User registration
+// user registration
 export async function register(req, res, next) {
   try {
 
-    // Prepare request data
+    // prepare request data
     let existingUser = await User.findOne({ username: req.body.username });
     if (existingUser) {
-      throw createError('Username already exists', 400);
+      throw raiseError('Username already exists', 400);
     }
     let hashedPassword = await hash(req.body.password, SALT_ROUNDS);
 
-    // Persist user data
+    // persist user data
     let user = new User({
       username: req.body.username.trim(),
       password: hashedPassword,
@@ -61,11 +61,11 @@ export async function register(req, res, next) {
     });
     await user.save();
 
-    // Handle response data
+    // handle response data
     let token = jsonwebtoken.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "12h" }
+      { expiresIn: "48h" }
     );
 
     res.status(201).json({
@@ -80,33 +80,33 @@ export async function register(req, res, next) {
 }
 
 
-// User authentication
+// user authentication
 export async function login(req, res, next) {
   try {
     let { username, password } = req.body;
 
-    // Check username validity
+    // check username validity
     checkLoginAttempts(username);
     
     let user = await User.findOne({ username }).select('+password');
     if (!user) {
       updateLoginAttempts(username);
-      throw createError('Invalid credentials', 401);
+      throw raiseError('Invalid credentials', 401);
     }
 
-    if (user.status === "blocked") {
-      throw createError('Account is blocked. Please contact support.', 403);
+    if (user.status == "blocked") {
+      throw raiseError('Account is blocked. Please contact support.', 403);
     }
 
-    // Check password validity
+    // check password validity
     let isValidPassword = await compare(password, user.password);
 
     if (!isValidPassword) {
       updateLoginAttempts(username);
-      throw createError('Invalid credentials', 401);
+      throw raiseError('Invalid credentials', 401);
     }
 
-    // Handle successful login
+    // handle successful login
     loginAttempts.delete(username);
 
     let token = jsonwebtoken.sign(

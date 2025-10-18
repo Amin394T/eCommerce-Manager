@@ -1,11 +1,6 @@
-import { unlink } from "node:fs";
-import { promisify } from 'node:util';
-
 import Product from "../models/productModel.js";
-import { createError } from "../utilities/ErrorMsg.js";
+import { raiseError } from "../utilities/ErrorMsg.js";
 
-
-const unlinkAsync = promisify(unlink);
 
 export async function createProduct(req, res, next) {
   const productData = req.file 
@@ -29,7 +24,7 @@ export async function createProduct(req, res, next) {
   try {
     const existingProduct = await Product.findOne({ reference: product.reference });
     if (existingProduct) {
-      throw createError('Product with this reference already exists', 400);
+      throw raiseError('Product with this reference already exists', 400);
     }
 
     await product.save();
@@ -67,16 +62,16 @@ export async function updateProduct(req, res, next) {
   try {
     const existingProduct = await Product.findOne({ reference: req.params.id });
     if (!existingProduct) {
-      throw createError('Product not found', 404);
+      throw raiseError('Product not found', 404);
     }
 
     if (existingProduct.owner != req.authorization.userId) {
-      throw createError('Not authorized to modify this product', 403);
+      throw raiseError('Not authorized to modify this product', 403);
     }
 
     const result = await Product.updateOne({ reference: req.params.id }, product);
-    if (result.modifiedCount === 0) {
-      throw createError('No changes were made to the product', 400);
+    if (result.modifiedCount == 0) {
+      throw raiseError('No changes were made to the product', 400);
     }
 
     res.status(200).json({ 
@@ -97,7 +92,7 @@ export async function findProduct(req, res, next) {
   try {
     const product = await Product.findOne({ reference: req.params.id });
     if (!product) {
-      throw createError('Product not found', 404);
+      throw raiseError('Product not found', 404);
     }
     res.status(200).json(product);
   }
@@ -111,7 +106,7 @@ export async function findCategoryProducts(req, res, next) {
   try {
     const products = await Product.find({ category: req.params.category });
     if (!products.length) {
-      throw createError('No products found in this category', 404);
+      throw raiseError('No products found in this category', 404);
     }
     res.status(200).json(products);
   }
@@ -125,7 +120,7 @@ export async function findAllProducts(req, res, next) {
   try {
     const products = await Product.find();
     if (!products.length) {
-      throw createError('No products found', 404);
+      throw raiseError('No products found', 404);
     }
     res.status(200).json(products);
   }
@@ -139,11 +134,11 @@ export async function deleteProduct(req, res, next) {
   try {
     const product = await Product.findOne({ reference: req.params.id });
     if (!product) {
-      throw createError('Product not found', 404);
+      throw raiseError('Product not found', 404);
     }
 
     if (product.owner != req.authorization.userId) {
-      throw createError('Not authorized to delete this product', 403);
+      throw raiseError('Not authorized to delete this product', 403);
     }
 
     const result = await Product.updateOne(
@@ -151,8 +146,8 @@ export async function deleteProduct(req, res, next) {
       { status: 'deleted' }
     );
 
-    if (result.modifiedCount === 0) {
-      throw createError('Failed to delete product', 400);
+    if (result.modifiedCount == 0) {
+      throw raiseError('Failed to delete product', 400);
     }
 
     res.status(200).json({ 

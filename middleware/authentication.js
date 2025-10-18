@@ -1,4 +1,5 @@
 import jsonwebtoken from "jsonwebtoken";
+import { raiseError } from "../utilities/ErrorMsg.js";
 
 export default (req, res, next) => {
   try {
@@ -7,11 +8,11 @@ export default (req, res, next) => {
     req.authorization = { userId: decodedToken.userId };
 
     if (req.body.userId && req.body.userId != decodedToken.userId) {
-      throw "Invalid user ID.";
+      throw raiseError('Authentication failed', 401);
     }
     else next();
   }
-  catch {
-    res.status(401).json({ error: new Error("Invalid request.") });
+  catch (error) {
+    next(error);
   }
 };

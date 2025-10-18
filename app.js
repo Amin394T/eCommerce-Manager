@@ -1,27 +1,28 @@
-import express from "express";
-import mongoose, { connect } from "mongoose";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from 'dotenv';
+import express from "express";
+import mongoose, { connect } from "mongoose";
 
 import { logMessage } from "./server.js";
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
 
-// Application configuration
+// application configuration
 dotenv.config();
 const app = express();
+export default app;
 
 connect(process.env.MONGODB_URI)
-  .then(() => { logMessage("Successfully connected to MongoDB Atlas!") })
+  .then(() => { logMessage("Connected to DB succeeded.") })
   .catch((error) => {
-    logMessage("Connection to MongoDB Atlas failed! " + error.message);
+    logMessage("Connection to DB failed! " + error.message);
     process.kill(process.pid, 'SIGINT');
   });
 
 
-// Request configuration
+// request configuration
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "*");
@@ -42,22 +43,22 @@ app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 
 
-// Health checking
+// health checking
 app.get('/health', (req, res) => {
   res.json({
-    status: 'up',
-    timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    application: 'running',
+    database: mongoose.connection.readyState == 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
   });
 });
 
 
-// Error handling
+// error handling
 app.use((err, req, res, next) => {
   logMessage(`Error occurred: ${err.message}`);
   return res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
-    ...(process.env.ENV_TYPE !== 'production' && { stack: err.stack })
+    ...(process.env.ENV_TYPE != 'production' && { stack: err.stack })
   });
 });
 
@@ -65,5 +66,3 @@ app.use((req, res) => {
   logMessage(`Unknown Route: ${req.method} ${req.url}`);
   return res.status(404).json({ message: 'Route not found' });
 });
-
-export default app;

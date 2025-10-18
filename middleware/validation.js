@@ -1,4 +1,6 @@
 import { body, validationResult } from 'express-validator';
+import { raiseError } from '../utilities/ErrorMsg.js';
+
 
 export const validateRegister = [
   body('username')
@@ -21,12 +23,19 @@ export const validateRegister = [
 
   (req, res, next) => {
     const errors = validationResult(req);
+    
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      const errorMessages = errors
+        .array()
+        .map(err => `${err.path}: ${err.msg}`)
+        .join(', ');
+
+      return next(raiseError(errorMessages, 422));
     }
-    next();
+    else next();
   }
 ];
+
 
 export const validateLogin = [
   body('username')
@@ -40,9 +49,15 @@ export const validateLogin = [
 
   (req, res, next) => {
     const errors = validationResult(req);
+    
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      const errorMessages = errors
+        .array()
+        .map(err => `${err.path}: ${err.msg}`)
+        .join(', ');
+
+      return next(raiseError(errorMessages, 422));
     }
-    next();
+    else next();
   }
 ];
