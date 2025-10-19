@@ -3,12 +3,7 @@ import { raiseError } from "../utilities/ErrorMsg.js";
 
 
 export async function createProduct(req, res, next) {
-  const productData = req.file 
-    ? {
-        ...JSON.parse(req.body.product),
-        image: req.protocol + "://" + req.get("host") + "/media/images/" + req.file.filename
-      }
-    : req.body;
+  const productData = { ...JSON.parse(req.body.product), image: req.file?.filename };
 
   const product = new Product({
     reference: productData.reference,
@@ -43,12 +38,7 @@ export async function createProduct(req, res, next) {
 }
 
 export async function updateProduct(req, res, next) {
-  const productData = req.file 
-    ? {
-        ...JSON.parse(req.body.product),
-        image: req.protocol + "://" + req.get("host") + "/media/images/" + req.file.filename
-      }
-    : req.body;
+  const productData = { ...JSON.parse(req.body.product), image: req.file?.filename };
 
   const product = {
     name: productData.name,

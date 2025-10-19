@@ -12,9 +12,9 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, callback) => {
     const name = file.originalname.replace(/ /g, "-");
-    const extension = MIME_TYPES[file.filename];
+    const extension = MIME_TYPES[file.mimetype];
     callback(null, `${name}_${Date.now()}.${extension}`);
   },
 });
 
-export default multer({ storage }).single("image");
+export default multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }).single("image");

@@ -15,7 +15,7 @@ const app = express();
 export default app;
 
 connect(process.env.MONGODB_URI)
-  .then(() => { logMessage("Connected to DB succeeded.") })
+  .then(() => { logMessage("Connection to DB succeeded.") })
   .catch((error) => {
     logMessage("Connection to DB failed! " + error.message);
     process.kill(process.pid, 'SIGINT');
