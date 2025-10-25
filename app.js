@@ -7,6 +7,7 @@ import mongoose, { connect } from "mongoose";
 import { logMessage } from "./server.js";
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 
 // application configuration
@@ -41,6 +42,7 @@ app.use("/images", express.static(join(__dirname, "media/images")));
 app.use(express.json());
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 
 // health checking
