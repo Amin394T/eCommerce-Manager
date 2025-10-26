@@ -2,13 +2,28 @@ import Review from "../models/reviewModel.js";
 import { raiseError } from "../utilities/ErrorMsg.js";
 
 
-export async function readReviews(req, res, next) {
+export async function findProductReviews(req, res, next) {
   try {
     const reviews = await Review.find({
       product: req.params.product,
       status: { $in: ["normal", "edited"] }
     })
     .populate('user', 'username');
+
+    res.status(200).json(reviews);
+  }
+  catch (error) {
+    next(error);
+  }
+}
+
+
+export async function findMerchantReviews(req, res, next) {
+  try {
+    const reviews = await Review.find({
+      user: req.params.merchant,
+      status: { $in: ["normal", "edited"] }
+    });
 
     res.status(200).json(reviews);
   }
