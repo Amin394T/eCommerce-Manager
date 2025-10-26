@@ -2,12 +2,13 @@ import Review from "../models/reviewModel.js";
 import { raiseError } from "../utilities/ErrorMsg.js";
 
 
-export async function readReviews(req, res) {
+export async function readReviews(req, res, next) {
   try {
     const reviews = await Review.find({
       product: req.params.product,
       status: { $in: ["normal", "edited"] }
-    });
+    })
+    .populate('user', 'username');
 
     res.status(200).json(reviews);
   }
@@ -17,16 +18,16 @@ export async function readReviews(req, res) {
 }
 
 
-export async function createReview(req, res) {
+export async function createReview(req, res, next) {
   try {
-    const { product, content, rating } = req.body;
+    const { product, comment, rating } = req.body;
 
-    if (!product || !content || !rating)
+    if (!product || !comment || !rating)
       throw raiseError('Missing Required Data!', 422);
 
-    const review = await Review.create({ product, content, rating, user: req.authorization.userId});
+    const review = await Review.create({ product, comment, rating, user: req.authorization.userId});
 
-    res.status(201).json(review.dataValues);
+    res.status(201).json(review);
   }
   catch (error) {
     next(error);
@@ -34,14 +35,14 @@ export async function createReview(req, res) {
 }
 
 
-export async function updateReview(req, res) {
+export async function updateReview(req, res, next) {
   try {
-    const { product, content, rating } = req.body;
+    const { comment, rating } = req.body;
 
-    if (!product || !content || !rating)
+    if (!comment || !rating)
       throw raiseError('Missing Required Data!', 422);
 
-    const review = await Review.findOne({ id: req.params.id });
+    const review = await Review.findOne({ _id: req.params.id });
     if (!review)
       throw raiseError('Review not Found!', 404);
     if (review.user != req.authorization.userId)
@@ -51,21 +52,22 @@ export async function updateReview(req, res) {
     if (new Date(review.date) < timeLimit)
       throw raiseError('Time Limit Exceeded!', 403);
 
-    review.content = content;
+    review.comment = comment;
     review.rating = rating;
     review.status = "edited";
     await review.save();
 
-    res.status(200).json(review.dataValues);
+    res.status(200).json(review);
   }
   catch (error) {
     next(error);
   }
 }
 
-export async function deleteReview(req, res) {
+
+export async function deleteReview(req, res, next) {
   try {
-    const review = await Review.findOne({ id: req.params.id });
+    const review = await Review.findOne({ _id: req.params.id });
     if (!review)
       throw raiseError('Review not Found!', 404);
     if (review.user != req.authorization.userId)
@@ -78,7 +80,7 @@ export async function deleteReview(req, res) {
     review.status = "removed";
     await review.save();
 
-    res.status(200).json(review.dataValues);
+    res.status(200).json(review);
   }
   catch (error) {
     next(error);
