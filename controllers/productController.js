@@ -2,82 +2,6 @@ import Product from "../models/productModel.js";
 import { raiseError } from "../utilities/ErrorMsg.js";
 
 
-export async function createProduct(req, res, next) {
-  const productData = { ...JSON.parse(req.body.product), image: req.file?.filename };
-
-  const product = new Product({
-    reference: productData.reference,
-    name: productData.name,
-    description: productData.description,
-    image: productData.image,
-    price: productData.price,
-    category: productData.category,
-    quantity: productData.quantity,
-    owner: req.authorization.userId,
-  });
-
-  try {
-    const existingProduct = await Product.findOne({ reference: product.reference });
-    if (existingProduct) {
-      throw raiseError('Product with this reference already exists', 400);
-    }
-
-    await product.save();
-    res.status(201).json({ 
-      message: "Product saved successfully!",
-      product: {
-        id: product._id,
-        name: product.name,
-        reference: product.reference
-      }
-    });
-  }
-  catch (error) {
-    next(error);
-  }
-}
-
-export async function updateProduct(req, res, next) {
-  const productData = { ...JSON.parse(req.body.product), image: req.file?.filename };
-
-  const product = {
-    name: productData.name,
-    description: productData.description,
-    image: productData.image,
-    price: productData.price,
-    category: productData.category,
-    quantity: productData.quantity,
-  };
-
-  try {
-    const existingProduct = await Product.findOne({ reference: req.params.id });
-    if (!existingProduct) {
-      throw raiseError('Product not found', 404);
-    }
-
-    if (existingProduct.owner != req.authorization.userId) {
-      throw raiseError('Not authorized to modify this product', 403);
-    }
-
-    const result = await Product.updateOne({ reference: req.params.id }, product);
-    if (result.modifiedCount == 0) {
-      throw raiseError('No changes were made to the product', 400);
-    }
-
-    res.status(200).json({ 
-      message: "Product updated successfully!",
-      product: {
-        reference: req.params.id,
-        ...product
-      }
-    });
-  }
-  catch (error) {
-    next(error);
-  }
-}
-
-
 export async function findProduct(req, res, next) {
   try {
     const product = await Product.findOne({ reference: req.params.id });
@@ -91,12 +15,11 @@ export async function findProduct(req, res, next) {
   }
 }
 
-
 export async function findCategoryProducts(req, res, next) {
   try {
     const products = await Product.find({ category: req.params.category });
     if (!products.length) {
-      throw raiseError('No products found in this category', 404);
+      throw raiseError('No products found', 404);
     }
     res.status(200).json(products);
   }
@@ -104,7 +27,6 @@ export async function findCategoryProducts(req, res, next) {
     next(error);
   }
 }
-
 
 export async function findAllProducts(req, res, next) {
   try {
@@ -120,28 +42,79 @@ export async function findAllProducts(req, res, next) {
 }
 
 
+export async function createProduct(req, res, next) {
+  try {
+    const productData = { 
+      ...JSON.parse(req.body.product), 
+      image: req.file?.filename,
+      owner: req.authorization.userId
+    };
+
+    const existingProduct = await Product.findOne({ reference: productData.reference });
+    if (existingProduct)
+      throw raiseError('Product already exists', 400);
+
+    const product = await Product.create(productData);
+    
+    res.status(201).json({ 
+      message: "Product creation succeeded",
+      product: {
+        id: product._id,
+        name: product.name,
+        reference: product.reference
+      }
+    });
+  }
+  catch (error) {
+    next(error);
+  }
+}
+
+
+export async function updateProduct(req, res, next) {
+  try {
+    const productData = JSON.parse(req.body.product || '{}');
+    if (req.file?.filename)
+      productData.image = req.file.filename;
+
+    const existing = await Product.findOne({ reference: req.params.id });
+    if (!existing)
+      throw raiseError('Product not found', 404);
+
+    const { name, description, image, price, type, quantity, discount, specification, delivery, policy } = productData;
+    const updated = await Product.findOneAndUpdate(
+      { reference: req.params.id },
+      { $set: { name, description, image, price, type, quantity, discount, specification, delivery, policy } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Product update succeeded",
+      product: updated
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 export async function deleteProduct(req, res, next) {
   try {
-    const product = await Product.findOne({ reference: req.params.id });
+    const product = await Product.findOneAndUpdate(
+      { 
+        reference: req.params.id,
+        owner: req.authorization.userId 
+      },
+      { status: 'deleted' },
+      { new: true }
+    );
+
     if (!product) {
       throw raiseError('Product not found', 404);
     }
 
-    if (product.owner != req.authorization.userId) {
-      throw raiseError('Not authorized to delete this product', 403);
-    }
-
-    const result = await Product.updateOne(
-      { reference: req.params.id },
-      { status: 'deleted' }
-    );
-
-    if (result.modifiedCount == 0) {
-      throw raiseError('Failed to delete product', 400);
-    }
-
     res.status(200).json({ 
-      message: "Product deleted successfully!",
+      message: "Product deletion succeeded",
       reference: req.params.id
     });
   }

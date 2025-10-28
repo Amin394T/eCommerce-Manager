@@ -8,7 +8,7 @@ export async function findProductReviews(req, res, next) {
       product: req.params.product,
       status: { $in: ["normal", "edited"] }
     })
-    .populate('user', 'username');
+    .populate('user', 'username city');
 
     res.status(200).json(reviews);
   }
